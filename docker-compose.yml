@@ -1,0 +1,53 @@
+version: '3.8'
+
+volumes:
+  volume_devopspro:
+
+networks:
+  devopspro_net:
+    driver: bridge
+
+services:
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express:latest
+    ports: 
+     - 8081:8081
+    networks:
+      - devopspro_net
+    depends_on:
+      - mongodb
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongouser:mongopwd@mongodb:27017/
+
+  mongo:
+    container_name: mongodb
+    image: mongo:4.4.3
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - devopspro_net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongouser
+      MONGO_INITDB_ROOT_PASSWORD: mongopwd
+
+  rotten-potatoes:
+    container_name: rotten-potatoes
+    image: brancomsp/rotten-potatoes:v1
+    build:
+     dockerfile: Dockerfile
+     context: ./src
+    restart: always
+    networks:
+      - devopspro_net
+    depends_on:
+    - mongo
+    ports:
+    - 5000:5000
+    environment:
+      MONGODB_DB: admin
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: "27017"
+      MONGODB_USERNAME: mongouser
+      MONGODB_PASSWORD: mongopwd
